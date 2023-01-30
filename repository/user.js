@@ -34,14 +34,15 @@ class UserRepository {
     }
 
     async getUserExists(username, email) {
-        return await this.model.findOne({
+        let user = await this.model.findOne({
             where: {
                 [Op.or]: [
-                    {username: username},
-                    {email: email}
+                    {username},
+                    {email}
                 ]
             }
         });
+        return user;
     }
 
     async updateUser(user, id) {

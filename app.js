@@ -1,10 +1,14 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const bcrypt = require('bcrypt')
+const _ = require('lodash');
+const generateToken = require('./helper/jwt');
 require('dotenv').config();
 
 const app = express();;
-const apiRouter = require('./routers/auth');
+
+const apiUrl = "/api/v1"
 
 // setting cors
 let corsOptions = {
@@ -14,9 +18,6 @@ app.use(cors(corsOptions));
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }));
-
-const db = require("./models");
-const Role = db.role;
 
 // for development
 // db.sequelize.sync({ force: true }).then(() => {
@@ -35,10 +36,33 @@ const Role = db.role;
 //     });
 // }
 
+const UserRepository = require('./repository/user');
+
+//Auth
+const AuthRepository = require('./repository/auth');
+const AuthUseCase = require('./usecase/auth');
+
+const authRouter = require('./routers/auth');
+
+const authUC = new AuthUseCase(
+    new UserRepository(),
+    new AuthRepository(),
+    bcrypt,
+    generateToken,
+    _
+)
+
 app.get('/api/v1', (req, res) => {
     res.json({ message: 'welcome' })
 });
-app.use('/api/v1', apiRouter);
+
+app.use((req, res, next) => {
+    req.authUC = authUC;
+
+    next();
+});
+
+app.use(`${apiUrl}/`, authRouter)
 
 const PORT = process.env.PORT || 8001;
 app.listen(PORT, () => {

@@ -1,76 +1,49 @@
-const db = require('../models');
-const config = require('../config/auth.config');
-const User = db.user;
-const Role = db.role;
-const Op = db.Sequelize.Op;
-var jwt = require('jsonwebtoken');
-var bcrypt = require('bcryptjs');
+const resData = require('../helper/response');
+const { v4: uuidv4 } = require('uuid');
 
-exports.register = (req, res) => {
-    User.create({
-        username: req.body.username,
-        email: req.body.email,
-        password: bcrypt.hashSync(req.body.password, 8)
-    })
-    .then(user => {
-        if(req.body.roles) {
-            Role.findAll({
-                where: {
-                    name: {
-                        [Op.or]: req.body.roles
-                    }
-                }
-            }).then(roles => {
-                user.setRoles(roles).then(() => {
-                    res.send({ message: 'User was registered successfully!'});
-                })
-            });
-        } else {
-            user.setRoles([1]).then(() => {
-                res.send({ message: 'User was registered successfully'})
-            });
-        }
-    })
-    .catch(err => {
-        res.status(500).send({ message: err.message});
-    })
-};
+module.exports = {
+    login: async (req, res, next) => {
+        try {
+            let {username, password} = req.body;
+            let user = await req.authUC.loginUser(username, password);
 
-exports.signin = (req, res) => {
-    User.findOne({
-        where: {
-            username: req.body.username
-        }
-    })
-    .then(user => {
-        if(!user){
-            return res.status(404).send({ message: "User not found" });
-        }
-        
-        var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
-        if(!passwordIsValid){
-            return res.status(401).send({ accessToken: null, message: "Invalid password" });
-        }
-
-        var token = jwt.sign({id: user.id}, config.secret, {
-            expiresIn: 86400 // 24 hours
-        })
-
-        var authorities = [];
-        user.getRoles().then(roles => {
-            for (let i = 0; i < roles.length; i++) {
-                authorities.push("ROLE_" + roles[i].name.toUpperCase());
+            if (user.isSuccess === false ) {
+                return res.status(user.statusCode).json(resData.failed(user.reason));
             }
-            res.status(200).send({ 
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                roles: authorities,
-                accessToken: token})
-        });
 
-    })
-    .catch(err => {
-        res.status(500).send({ message: err.message});
-    });
+            return res.status(200).json(resData.success({
+                token: user.token,
+                user: user.data
+            }))
+        }catch (e) {
+            next(e);
+        }
+    },
+
+    register: async (req, res, next) => {
+        try {
+            let userData = {
+                id: uuidv4(),
+                name: req.body.name,
+                email: req.body.email,
+                username: req.body.username, 
+                password: req.body.password,
+                phone: req.body.phone,
+                is_admin: false
+            };
+            
+            console.log("controller : "+ userData);
+            let resUser = await req.authUC.registerUser(userData);
+            if (resUser.isSuccess === false) {
+                return res.status(resUser.statusCode).json(resData.failed(resUser.reason));
+            }
+    
+            return res.status(200).json(resData.success({
+                user: resUser.data,
+                token: resUser.token
+            })); 
+        } catch (e) {
+            next(e);
+        }   
+    },
 }

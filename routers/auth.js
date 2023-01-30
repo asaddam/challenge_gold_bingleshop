@@ -1,14 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { register } = require('../middleware');
-const controller = require('../controllers/auth');
 
+// Import the controller
+const auth = require('../controllers/auth');
 
-router.post("/auth/signup", [
-    register.checkDuplicateUsernameOrEmail,
-    register.checkRolesExisted
-], controller.register);
-
-router.post('/auth/signin', controller.signin);
+router.post('/login', auth.login);
+router.post('/register', auth.register);
 
 module.exports = router;
