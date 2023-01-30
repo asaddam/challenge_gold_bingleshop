@@ -56,6 +56,14 @@ class OrderRepository {
         return await this.model.findAll(filter);
     }
 
+    async getListOrderMultipleQuery(filter) {
+        return await this.model.findAll({
+            where: {
+                [Op.or]: filter
+            }
+        })
+    }
+
     // async verifyOrderWithoutStatusPending(orderId) {
     //     return await this.model.findOne({
     //         where: {
