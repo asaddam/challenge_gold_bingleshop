@@ -132,4 +132,68 @@ class OrderUC {
         return result;
     }
 
+    async addProductInDetailOrder(userId, orderId, products){
+        let orderDetailByProductId = [];
+
+        for(let i = 0; i < products.length; i++){
+            if(products[i].quantity < 1){
+                continue;
+            }
+        }
+
+        const getProductById = await this.productRepository.getProductById(products[i].id);
+
+        if(getProductById === null){
+            continue;
+        }
+
+        if(getProductById.stock < products[i].quantity){
+            continue;
+        }
+
+        const orderDetail = {
+            user_id: userId,
+            order_id: orderId,
+            product_id: products[i].id,
+            quantity: products[i].quantity,
+            total_price: products[i].quantity * getProductById.price,
+        }
+
+        await this.orderDetailRepository.addOrderDetails(orderDetail);
+        orderDetailByProductId.push(getProductById);
+
+        return orderDetailByProductId;
+    }
+
+    async createOrder(userId, oederId, products) {
+        let result = {
+            isSuccess: false,
+            reason: null,
+            data: null,
+        }
+
+        const orders = {
+            id: orderId,
+            user_id: userId,
+            status: this.orderConstant.ORDER_PENDING,
+        }
+
+        const orderDetail = await this.addProductInDetailOrder(userId, orderId, products);
+
+        if (orderDetail.length < products.length){
+            result.reason = "can't procces the order, please check your product in order";
+        }
+
+        await this.orderRepository.createOrder(orders);
+        result.isSuccess = true;
+        result.data = {
+            order_id: orderId,
+            order_detail: orderDetail,
+        }
+
+        return result;
+    }
+
+    
+
 }
