@@ -19,23 +19,9 @@ app.use(cors(corsOptions));
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// for development
-// db.sequelize.sync({ force: true }).then(() => {
-//     console.log('Drop and Resync Db');
-//     initial();
-// });
-// function initial() {
-//     Role.create({
-//         id: 1,
-//         name: "user"
-//     });
+const orderConstant = require('./helper/constant/order');
 
-//     Role.create({
-//         id: 2,
-//         name: "admin"
-//     });
-// }
-
+//User
 const UserRepository = require('./repository/user');
 
 //Auth
@@ -52,12 +38,39 @@ const authUC = new AuthUseCase(
     _
 )
 
+//Product
+const ProductRepo = require('./repository/product');
+const ProductUseCase = require('./usecase/product');
+
+//Category
+const CategoryRepository = require('./repository/category');
+const CategoryUseCase = require('./usecase/category');
+
+//Order
+const OrderRepository = require('./repository/order');
+const OrderDetailRepository = require('./repository/orderDetail');
+const OrderUseCase = require('./usecase/order');
+
+//UC
+const categoryUC = new CategoryUseCase(new CategoryRepository(), new ProductRepo());
+const productUC = new ProductUseCase(new ProductRepo(), new CategoryRepository(), _);
+const orderUC = new OrderUseCase(new OrderRepository(),
+    new OrderDetailRepository(),
+    new ProductRepo(),
+    new UserRepository(),
+    _, orderConstant
+)
+
+
 app.get('/api/v1', (req, res) => {
     res.json({ message: 'welcome' })
 });
 
 app.use((req, res, next) => {
     req.authUC = authUC;
+    req.productUC = productUC;
+    req.categoryUC = categoryUC;
+    req.orderUC = orderUC
 
     next();
 });
