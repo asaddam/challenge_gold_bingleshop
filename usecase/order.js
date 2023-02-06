@@ -144,11 +144,9 @@ class OrderUC {
         const getProductById = await this.productRepository.getProductById(products[i].id);
 
         if(getProductById === null){
-            continue;
         }
 
         if(getProductById.stock < products[i].quantity){
-            continue;
         }
 
         const orderDetail = {
@@ -193,7 +191,6 @@ class OrderUC {
 
         return result;
     }
-
-    
-
 }
+
+module.exports = OrderUC;

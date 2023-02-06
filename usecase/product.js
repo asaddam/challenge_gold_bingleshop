@@ -118,3 +118,5 @@ class ProductUC{
         return result;
     }
 }
+
+module.exports = ProductUC;

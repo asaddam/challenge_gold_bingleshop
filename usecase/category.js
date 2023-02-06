@@ -111,5 +111,6 @@ class CategoryUC {
 
         return result;
     }
-
 }
+
+module.exports = CategoryUC;

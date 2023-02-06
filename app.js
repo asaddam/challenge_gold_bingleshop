@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
 const _ = require('lodash');
 const generateToken = require('./helper/jwt');
 require('dotenv').config();
@@ -29,6 +29,8 @@ const AuthRepository = require('./repository/auth');
 const AuthUseCase = require('./usecase/auth');
 
 const authRouter = require('./routers/auth');
+const adminRouter = require('./routers/admin');
+const publicRouter = require('./routers/public');
 
 const authUC = new AuthUseCase(
     new UserRepository(),
@@ -76,6 +78,9 @@ app.use((req, res, next) => {
 });
 
 app.use(`${apiUrl}/`, authRouter)
+app.use(`${apiUrl}/`, adminRouter)
+app.use(`${apiUrl}/`, publicRouter)
+
 
 const PORT = process.env.PORT || 8001;
 app.listen(PORT, () => {

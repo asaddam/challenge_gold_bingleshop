@@ -25,3 +25,5 @@ class OrderDetailRepository {
         });
     }
 }
+
+module.exports = OrderDetailRepository;

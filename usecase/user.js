@@ -97,3 +97,5 @@ class UserUC {
         return result;
     }
 }
+
+module.exports = UserUC;
